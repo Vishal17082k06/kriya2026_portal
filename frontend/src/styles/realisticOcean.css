@@ -1,0 +1,16 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #010b1a;
+}
+
+.realistic-ocean-canvas {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    image-rendering: auto;
+    /* smooth — not pixelated */
+}
