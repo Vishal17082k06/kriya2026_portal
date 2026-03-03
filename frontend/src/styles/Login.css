@@ -1,0 +1,226 @@
+/* import elegant pirate-style fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Libre+Baskerville:wght@400;500&display=swap');
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background: url('../assets/bg.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #3e2f1c; /* warm dark brown */
+    font-family: 'Libre Baskerville', serif;
+    font-size: 14px;
+}
+
+.login-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* let bg image show through */
+    background-color: transparent;
+}
+
+.header-top {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header-top img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 15px;
+    object-fit: contain;
+    display: block;
+}
+
+.header-top h2 {
+    margin: 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-header div:first-child {
+    margin-bottom: 10px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #f5e8d6;
+    font-family: 'Cinzel', serif;
+}
+
+.form-header div:last-child {
+    font-size: 14px;
+    color: #3e2f1c;
+}
+
+.login-container form {
+    /* magical parchment panel */
+    background: rgba(6,6,6,0.92);
+    padding: 40px;
+    border-radius: 18px;
+    border: 1px solid rgba(212,178,124,0.8);
+    box-shadow: 0 0 20px rgba(255,215,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* glowing golden edge halo */
+.login-container form::before {
+    content: '';
+    position: absolute;
+    top: -10px; left: -10px; right: -10px; bottom: -10px;
+    border: 2px solid rgba(255,215,0,0.06);
+    border-radius: 20px;
+    filter: blur(6px);
+    pointer-events: none;
+}
+
+/* floating dust particles */
+@keyframes dust {
+    0% {opacity:0; transform: translateY(0) scale(0.3);}
+    100% {opacity:0.6; transform: translateY(-80px) scale(1);}
+}
+
+.login-container .dust {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255,224,130,0.7);
+    border-radius: 50%;
+    animation: dust 4s infinite;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 15px;
+    color: #f5e8d6;
+    font-family: 'Libre Baskerville', serif;
+}
+
+.form-group input {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: rgba(184,134,11,0.9); /* gold focus */
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.form-group input[disabled] {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+button {
+    background-color: #b8860b; /* dark gold */
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+button:disabled {
+   
+    cursor: not-allowed;
+}
+
+button {
+    padding: 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Cinzel', serif;
+}
+
+button:not(.link-button):hover {
+    background-color: #45a049;
+}
+
+button:focus {
+    outline: none;
+}
+
+
+.switch-link {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #f5e8d6;
+    font-family: 'Libre Baskerville', serif;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    color: #f5e8d6;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 0;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 14px;
+}
+
+.link-button:hover {
+    text-decoration: underline;
+    background: none;
+}
+
+/* Reduced-brightness overrides: tone down glows, halos, and ember intensity */
+.login-container form {
+    /* soften any strong glow / halo */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+}
+
+.login-container form::before {
+    /* if a golden halo exists, make it much subtler */
+    border-color: rgba(255,215,0,0.15) !important;
+    filter: blur(4px) !important;
+}
+
+.login-container .ember,
+.signup-container .ember {
+    /* dim ember brightness and reduce size for subtle effect */
+    opacity: 0.5 !important;
+    transform: scale(0.7) !important;
+    filter: brightness(0.6) !important;
+}
+
+/* Tone down any strong golden outline used on buttons/forms */
+.glow,
+.golden-aura {
+    box-shadow: none !important;
+    border-color: rgba(255,215,0,0.12) !important;
+}
+.login-container form {
+    background: linear-gradient(
+        145deg,
+        rgba(20,14,10,0.95),
+        rgba(8,5,3,0.95)
+    );
+}

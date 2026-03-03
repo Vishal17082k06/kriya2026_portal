@@ -1,0 +1,252 @@
+/* fonts loaded in login.css; reuse here by inheriting */
+.signup-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* background color now covered by global body image */
+    background-color: transparent;
+}
+
+.header-top {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header-top img {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px auto;
+    object-fit: contain;
+}
+
+.header-top h2 {
+    margin: 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.form-header div:first-child {
+    margin-bottom: 10px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #f5e8d6;
+    font-family: 'Cinzel', serif;
+}
+
+.form-header div:last-child {
+    font-size: 14px;
+    color: #3e2f1c;
+}
+
+.signup-container form {
+    /* magical parchment panel */
+    background: rgba(253,247,226,0.9);
+    padding: 40px;
+    border-radius: 18px;
+    border: 1px solid rgba(212,178,124,0.8);
+    box-shadow: 0 0 20px rgba(255,215,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+}
+.signup-container form {
+    /* dark card for high contrast */
+    background: rgba(6,6,6,0.92);
+    color: #f5e8d6; /* light parchment text */
+    padding: 40px;
+    border-radius: 18px;
+    border: 1px solid rgba(30,30,30,0.9);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    backdrop-filter: blur(1px);
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+.signup-container form::before {
+    content: '';
+    position: absolute;
+    top: -10px; left: -10px; right: -10px; bottom: -10px;
+    border: 2px solid rgba(255,215,0,0.06);
+    border-radius: 20px;
+    filter: blur(3px);
+    pointer-events: none;
+}
+
+.signup-container form::before {
+    content: '';
+    position: absolute;
+    top: -10px; left: -10px; right: -10px; bottom: -10px;
+    border: 2px solid rgba(255,215,0,0.6);
+    border-radius: 20px;
+    filter: blur(6px);
+    pointer-events: none;
+}
+
+/* floating dust particles */
+@keyframes dust {
+    0% {opacity:0; transform: translateY(0) scale(0.3);}
+    100% {opacity:0.6; transform: translateY(-80px) scale(1);}
+}
+
+.signup-container .dust {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255,224,130,0.7);
+    border-radius: 50%;
+    animation: dust 4s infinite;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 15px;
+    color: #f5e8d6;
+    font-family: 'Libre Baskerville', serif;
+}
+
+.form-group input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+.form-group input {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: #f5e8d6;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.form-group input::placeholder {
+    color: rgba(245,232,214,0.55);
+}
+.form-group input:focus {
+    outline: none;
+    border-color: rgba(184,134,11,0.9);
+    box-shadow: 0 0 8px rgba(184,134,11,0.12);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Cinzel', serif;
+}
+.button-dark {
+    width: 100%;
+    padding: 12px;
+    background-color: #b8860b; /* dark gold */
+    color: #0b0b0b;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.08s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Cinzel', serif;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+button:hover,
+.button-dark:hover {
+    background-color: #a06f08;
+}
+
+.switch-link {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #f5e8d6;
+    font-family: 'Libre Baskerville', serif;
+}
+
+ .link-button {
+    background: none;
+    border: none;
+    color: #c17410;
+    cursor: pointer;
+    text-decoration: none; /* no underline */
+    padding: 0;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 14px;
+    width: auto;              /* prevent full-width hover area */
+    display: inline-block;
+}
+
+.link-button:hover {
+    text-decoration: underline;
+}
+
+/* Reduced-brightness overrides: tone down glows, halos, and ember intensity */
+.signup-container form {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+}
+
+.signup-container form::before {
+    border-color: rgba(255,215,0,0.15) !important;
+    filter: blur(4px) !important;
+}
+
+.signup-container .ember,
+.login-container .ember {
+    opacity: 0.5 !important;
+    transform: scale(0.7) !important;
+    filter: brightness(0.6) !important;
+}
+
+.glow,
+.golden-aura {
+    box-shadow: none !important;
+    border-color: rgba(255,215,0,0.12) !important;
+}
+.form-header div:last-child {
+    font-size: 14px;
+    color: #f5e8d6;
+    opacity: 0.9;
+    text-shadow: 0 0 8px rgba(255, 200, 120, 0.4);
+}
