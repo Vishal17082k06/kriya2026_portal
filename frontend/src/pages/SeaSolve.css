@@ -1,0 +1,84 @@
+.solve-container {
+  height: 100vh;
+  width: 100vw;
+  background: url("/SeaSolveBG.png") center/cover no-repeat; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.solve-card {
+  width: min(850px, 95vw);
+  background: rgba(63, 37, 12, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  padding: 24px;
+  color: white;
+  backdrop-filter: blur(8px);
+}
+
+.solve-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.q-title {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  color: #ffd86b;
+}
+
+.q-prompt {
+  opacity: 0.95;
+  line-height: 1.4;
+}
+
+.answer-input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  color: white;
+  outline: none;
+}
+
+.submit-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: gold;
+  color: black;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.muted {
+  opacity: 0.8;
+}
+
+.msg {
+  margin: 10px 0;
+  color: #ff6b6b;
+  font-weight: 600;
+}
