@@ -11,7 +11,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<ShipLanding />} />
         <Route path="/anchorage" element={<Anchorage />} />
-        <Route path="/sea/:id" element={<SeaSolve />} />
+        <Route path="/team/:kriyaID/sea/:seaId" element={<SeaSolve />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/admin" element={<AdminPage />} />
       </Routes>

@@ -1,8 +1,9 @@
-// src/pages/Anchorage.jsx
 import "./Anchorage.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 import { useEffect, useRef, useState } from "react";
+
+const KriyaID = "KRIYA2026";
 
 export default function Anchorage() {
   const navigate = useNavigate();
@@ -10,26 +11,36 @@ export default function Anchorage() {
 
   const selectedShip = location.state?.ship;
   const shipName = selectedShip?.name || "Pirate Voyage";
+  const kriyaID = location.state?.kriyaID || KriyaID;
 
   const { chests, points, seasCleared, cards, addCard } = useGame();
 
   const headerRef = useRef(null);
   const chestRefs = useRef({});
+  const processedRewardKeyRef = useRef(null);
 
   const [coinAnim, setCoinAnim] = useState(null);
   const [fly, setFly] = useState(false);
-
   const [showCard, setShowCard] = useState(false);
   const [pendingCard, setPendingCard] = useState(null);
 
   const ROUND_SECONDS = 30 * 60;
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
 
-  const processedRewardKeyRef = useRef(null);
-
   const handleSolve = (chest) => {
     if (!chest || chest.opened) return;
-    navigate(`/sea/${chest.id}`, { state: { ship: selectedShip } });
+
+    if (!kriyaID) {
+      alert("Team ID missing. Please login again.");
+      return;
+    }
+
+    navigate(`/team/${kriyaID}/sea/${chest.id}`, {
+      state: {
+        ship: selectedShip,
+        kriyaID,
+      },
+    });
   };
 
   const formatTime = (sec) => {
@@ -42,19 +53,20 @@ export default function Anchorage() {
     const id = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
+
     return () => clearInterval(id);
   }, []);
 
   const saveRewardToDB = async ({ seaId, earned, card }) => {
     try {
-      await fetch("/api/reward", {
+      await fetch("http://localhost:3000/api/reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
+          kriyaID,
           seaId,
           pointsEarned: earned ?? 0,
-          cardId: card?.id ?? null,
+          cardId: card?._id ?? null,
           shipId: selectedShip?.id ?? null,
         }),
       });
@@ -69,7 +81,6 @@ export default function Anchorage() {
     setPendingCard(null);
   };
 
-  // ✅ reward handler: popup IMMEDIATE, coin optional
   useEffect(() => {
     const reward = location.state?.reward;
     if (!reward || !reward.seaId) return;
@@ -78,24 +89,22 @@ export default function Anchorage() {
     const earned = Number(reward.earned ?? 0);
     const card = reward.card ?? null;
 
-    const rewardKey = `${seaId}:${earned}:${card?.id ?? card?.name ?? "no-card"}`;
+    const rewardKey = `${seaId}:${earned}:${card?._id ?? card?.name ?? "no-card"}`;
     if (processedRewardKeyRef.current === rewardKey) return;
     processedRewardKeyRef.current = rewardKey;
 
     saveRewardToDB({ seaId, earned, card });
 
-    // ✅ SHOW POPUP IMMEDIATELY (no waiting)
     if (card) {
       setPendingCard({
-        id: card.id ?? card.name,
+        id: card._id ?? card.name,
         name: card.name,
         description: card.description,
-        difficulty: card.difficulty,
+        difficulty: card.difficultyTag,
       });
       setShowCard(true);
     }
 
-    // ✅ Coin animation: try after paint so refs exist
     requestAnimationFrame(() => {
       const chestEl = chestRefs.current[seaId];
       const headerEl = headerRef.current;
@@ -106,7 +115,6 @@ export default function Anchorage() {
 
       const startX = chestRect.left + chestRect.width / 2;
       const startY = chestRect.top + chestRect.height / 2;
-
       const endX = headerRect.left + headerRect.width / 2;
       const endY = headerRect.top + headerRect.height / 2;
 
@@ -120,13 +128,11 @@ export default function Anchorage() {
 
       requestAnimationFrame(() => setFly(true));
 
-      const COIN_MS = 3200;
       const t = setTimeout(() => {
         setFly(false);
         setCoinAnim(null);
-      }, COIN_MS);
+      }, 3200);
 
-      // cleanup
       return () => clearTimeout(t);
     });
   }, [location.key]);
@@ -134,7 +140,14 @@ export default function Anchorage() {
   const goToRound2 = () => {
     const ok = window.confirm("⚠️ Enter Round 2 now?\nYou cannot return back to Round 1.");
     if (!ok) return;
-    navigate("/map", { replace: true, state: { ship: selectedShip } });
+
+    navigate("/map", {
+      replace: true,
+      state: {
+        ship: selectedShip,
+        kriyaID,
+      },
+    });
   };
 
   return (
@@ -177,7 +190,11 @@ export default function Anchorage() {
           onClick={() => handleSolve(chest)}
           title={chest.opened ? "Already solved" : "Click to solve"}
         >
-          <img src={chest.opened ? "/opens.png" : "/locked.png"} alt="chest" className="chest" />
+          <img
+            src={chest.opened ? "/opens.png" : "/locked.png"}
+            alt="chest"
+            className="chest"
+          />
           <div className="chest-name">{chest.name}</div>
         </div>
       ))}
@@ -224,7 +241,9 @@ export default function Anchorage() {
         </div>
 
         <div className="cards-list">
-          {cards.length === 0 && <div className="cards-empty">Solve seas to unlock cards…</div>}
+          {cards.length === 0 && (
+            <div className="cards-empty">Solve seas to unlock cards…</div>
+          )}
 
           {cards.map((c) => {
             const key = String(c.id ?? c.name);

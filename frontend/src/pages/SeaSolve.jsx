@@ -1,16 +1,19 @@
-// src/pages/SeaSolve.jsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 import "./SeaSolve.css";
 
-const API_BASE = "http://localhost:3002";
+const API_BASE = "http://localhost:3000/kriyabe";
+const KriyaID = "KRIYA2026";
 
 export default function SeaSolve() {
-  const { id } = useParams();
-  const seaId = Number(id);
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { kriyaID: routeKriyaID, seaId: routeSeaId } = useParams();
+
+  const kriyaID = routeKriyaID || location.state?.kriyaID || KriyaID;
+  const seaId = Number(routeSeaId);
+
   const { markSeaOpened } = useGame();
 
   const [loading, setLoading] = useState(true);
@@ -24,36 +27,57 @@ export default function SeaSolve() {
   useEffect(() => {
     let cancelled = false;
 
-    if (!Number.isFinite(seaId)) {
-      setMsg("Invalid sea id. Go back and click a chest again.");
-      setLoading(false);
-      return;
-    }
-
     async function loadQuestion() {
       try {
-        const url = `${API_BASE}/round1/questions/${seaId}`;
-        const res = await fetch(url);
+        if (!kriyaID) {
+          throw new Error("Team ID missing.");
+        }
 
+        if (!Number.isFinite(seaId)) {
+          throw new Error("Sea ID missing.");
+        }
+
+        const url = `${API_BASE}/api/round1/questions/${seaId}?team=${kriyaID}`;
+        console.log("Fetching question from:", url);
+
+        const res = await fetch(url);
         const text = await res.text();
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+
+        console.log("Status:", res.status);
+        console.log("Text:", text);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${text}`);
+        }
 
         const data = JSON.parse(text);
-        if (!cancelled) setQuestion(data);
+
+        if (!cancelled) {
+          setQuestion(data);
+        }
       } catch (err) {
-        if (!cancelled) setMsg(err.message || "Could not load question.");
+        if (!cancelled) {
+          setMsg(err.message || "Could not load question.");
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadQuestion();
-    return () => (cancelled = true);
-  }, [seaId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [kriyaID, seaId]);
 
   const submitAnswer = async () => {
     if (submitLockRef.current) return;
-    if (!answer.trim()) {
+
+    const trimmedAnswer = answer.trim();
+    if (!trimmedAnswer) {
       setMsg("Enter answer");
       return;
     }
@@ -63,14 +87,21 @@ export default function SeaSolve() {
     setMsg("");
 
     try {
-      const res = await fetch(`${API_BASE}/round1/submit`, {
+      const res = await fetch(`${API_BASE}/api/round1/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seaId, answer: answer.trim() }),
+        body: JSON.stringify({
+          kriyaID,
+          seaId,
+          answer: trimmedAnswer,
+        }),
       });
 
       const text = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
 
       const data = JSON.parse(text);
 
@@ -78,18 +109,18 @@ export default function SeaSolve() {
         const earned = Number(data.earnedPoints ?? 0);
         const card = data.card ?? null;
 
-        
         markSeaOpened(seaId, earned);
 
         navigate("/anchorage", {
           replace: true,
           state: {
             ship: location.state?.ship,
+            kriyaID,
             reward: { seaId, earned, card },
           },
         });
       } else {
-        setMsg("Wrong answer!");
+        setMsg(data.msg || "Wrong answer!");
       }
     } catch (err) {
       setMsg(err.message || "Network error");
@@ -103,22 +134,45 @@ export default function SeaSolve() {
     <div className="solve-container">
       <div className="solve-card">
         <h2>🌊 Sea {Number.isFinite(seaId) ? seaId : "-"}</h2>
+        <p className="team-id-label">Team: {kriyaID}</p>
 
         {loading && <p>Loading...</p>}
 
         {!loading && question && (
           <>
-            <h3>{question.title}</h3>
-            <p>{question.prompt}</p>
+            <h3>{question.questionType}</h3>
+            <p style={{ whiteSpace: "pre-line" }}>{question.question}</p>
+
+            {question.imageUrl && (
+              <img
+                src={question.imageUrl}
+                alt={`Sea ${question.questionNo}`}
+                className="question-image"
+              />
+            )}
+
+            {Array.isArray(question.options) && question.options.length > 0 && (
+              <div className="options-list">
+                {question.options.map((opt, index) => (
+                  <div key={index} className="option-item">
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            )}
 
             <input
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Answer"
+              placeholder="Answer (A / B / C / D)"
               className="answer-input"
             />
 
-            <button onClick={submitAnswer} disabled={submitting} className="submit-btn">
+            <button
+              onClick={submitAnswer}
+              disabled={submitting}
+              className="submit-btn"
+            >
               {submitting ? "Submitting..." : "Submit"}
             </button>
           </>
