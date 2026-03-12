@@ -32,7 +32,7 @@ export default function ShipLanding() {
       const team = JSON.parse(localStorage.getItem("team"));
 
       const res = await fetch(
-        "${API_BASE}/api/teams/select-ship",
+        `${API_BASE}/api/teams/select-ship`,
         {
           method: "POST",
           headers: {

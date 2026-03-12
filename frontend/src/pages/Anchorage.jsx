@@ -54,7 +54,7 @@ export default function Anchorage() {
 
   const saveRewardToDB = async ({ seaId, earned, card }) => {
     try {
-      await fetch("${API_BASE}/api/reward", {
+      await fetch(`${API_BASE}/api/reward`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kriyaID, seaId, pointsEarned: earned ?? 0, cardId: card?._id ?? null, shipId: selectedShip?.id ?? null })
