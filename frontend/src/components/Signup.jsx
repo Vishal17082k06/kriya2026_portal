@@ -1,14 +1,14 @@
 import { useState } from "react";
 import "../styles/Signup.css";
-import Login from "./Login.jsx";
+import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config/api";
 
 function Signup() {
+  const navigate = useNavigate();
   const [teamName, setTeamName] = useState("");
   const [kriyaID, setKriyaID] = useState("");
   const [captainName, setCaptainName] = useState("");
   const [regMail, setRegMail] = useState("");
-  const [showLogin, setShowLogin] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -21,17 +21,16 @@ function Signup() {
     };
 
     try {
-     const res = await fetch(
-  `${API_BASE}/api/auth/signup`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(signupData),
-  }
-);
-      
+      const res = await fetch(
+        `${API_BASE}/api/auth/signup`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(signupData),
+        }
+      );
 
       const data = await res.json();
 
@@ -42,13 +41,10 @@ function Signup() {
 
       alert("Signup successful! Please login.");
 
-      setTeamName("");
-      setKriyaID("");
-      setCaptainName("");
       setRegMail("");
 
-      // show login component
-      setShowLogin(true);
+      // navigate to login page
+      navigate("/codequest/login");
 
     } catch (error) {
       console.error(error);
@@ -56,10 +52,6 @@ function Signup() {
     }
   };
 
-  // If signup finished → render Login page
-  if (showLogin) {
-    return <Login />;
-  }
 
   return (
     <div className="signup-container">
@@ -127,7 +119,7 @@ function Signup() {
             <button
               type="button"
               className="link-button"
-              onClick={() => setShowLogin(true)}
+              onClick={() => navigate("/codequest/login")}
             >
               Login Here
             </button>

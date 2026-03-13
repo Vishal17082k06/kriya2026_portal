@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
-import "../styles/adminPage.css";
+import { API_BASE as BASE_URL } from "../config/api";
 
-const API_BASE = "http://localhost:5000/kriyabe/api/admin";
+const ADMIN_API = `${BASE_URL}/api/admin`;
 
 const AdminPage = () => {
     const [activeTab, setActiveTab] = useState("teams");
@@ -87,7 +86,7 @@ const AdminPage = () => {
     const fetchRound1Questions = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const res = await fetch(`${API_BASE}/round1/questions`, {
+            const res = await fetch(`${ADMIN_API}/round1/questions`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
@@ -114,7 +113,7 @@ const AdminPage = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem("adminToken");
-            const res = await fetch(`${API_BASE}/teams`, {
+            const res = await fetch(`${ADMIN_API}/teams`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
@@ -147,7 +146,7 @@ const AdminPage = () => {
         e.preventDefault();
         setAuthLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/login`, {
+            const res = await fetch(`${ADMIN_API}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(loginData)
@@ -189,7 +188,7 @@ const AdminPage = () => {
 
         try {
             const token = localStorage.getItem("adminToken");
-            const res = await fetch(`${API_BASE}/teams/${editingTeamId}`, {
+            const res = await fetch(`${ADMIN_API}/teams/${editingTeamId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -232,8 +231,8 @@ const AdminPage = () => {
         const payload = { ...qForm, options: finalOptions };
         const method = editingQuestionId ? "PUT" : "POST";
         const url = editingQuestionId
-            ? `${API_BASE}/round1/questions/${editingQuestionId}`
-            : `${API_BASE}/round1/questions`;
+            ? `${ADMIN_API}/round1/questions/${editingQuestionId}`
+            : `${ADMIN_API}/round1/questions`;
 
         try {
             const res = await fetch(url, {
@@ -288,7 +287,7 @@ const AdminPage = () => {
         if (!window.confirm("Are you sure you want to delete this question?")) return;
         const token = localStorage.getItem("adminToken");
         try {
-            const res = await fetch(`${API_BASE}/round1/questions/${id}`, {
+            const res = await fetch(`${ADMIN_API}/round1/questions/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });

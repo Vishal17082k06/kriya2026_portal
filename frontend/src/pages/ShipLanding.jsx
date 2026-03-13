@@ -48,7 +48,7 @@ export default function ShipLanding() {
       const data = await res.json();
 
       if (data.success) {
-        navigate("/anchorage", { state: { ship } });
+        navigate("/codequest/anchorage", { state: { ship } });
       }
 
     } catch (error) {

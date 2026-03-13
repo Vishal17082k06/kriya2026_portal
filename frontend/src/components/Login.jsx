@@ -47,7 +47,7 @@ function Login({ onLoginSuccess }) {
                 localStorage.setItem("token", data.token)
                 
                 // navigate to ship landing
-                navigate("/ShipLanding")
+                navigate("/codequest/shiplanding")
             }
 
         } catch (err) {

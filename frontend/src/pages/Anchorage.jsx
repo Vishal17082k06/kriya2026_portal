@@ -42,10 +42,10 @@ export default function Anchorage() {
   const handleSolve = (chest) => {
     if (!chest || chest.opened) return;
     const question = questions.find(q => q.seaId === chest.id);
-    navigate(`/team/${kriyaID}/sea/${chest.id}`, { state: { ship: selectedShip, kriyaID, question } });
+    navigate(`/codequest/team/${kriyaID}/sea/${chest.id}`, { state: { ship: selectedShip, kriyaID, question } });
   };
 
-  const formatTime = (sec) => { const m = Math.floor(sec/60); const s = sec % 60; return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; };
+  const formatTime = (sec) => { const m = Math.floor(sec / 60); const s = sec % 60; return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`; };
 
   useEffect(() => {
     const id = setInterval(() => setTimeLeft(prev => prev > 0 ? prev - 1 : 0), 1000);
@@ -88,7 +88,7 @@ export default function Anchorage() {
 
     // Show card
     if (card) {
-      setPendingCard({ id: card._id ?? card.name, name: card.name, description: card.description});
+      setPendingCard({ id: card._id ?? card.name, name: card.name, description: card.description });
       setShowCard(true);
     }
 
@@ -99,11 +99,11 @@ export default function Anchorage() {
       if (!chestEl || !headerEl) return;
       const chestRect = chestEl.getBoundingClientRect();
       const headerRect = headerEl.getBoundingClientRect();
-      const startX = chestRect.left + chestRect.width/2;
-      const startY = chestRect.top + chestRect.height/2;
-      const endX = headerRect.left + headerRect.width/2;
-      const endY = headerRect.top + headerRect.height/2;
-      setCoinAnim({ x:startX, y:startY, dx:endX-startX, dy:endY-startY, earned });
+      const startX = chestRect.left + chestRect.width / 2;
+      const startY = chestRect.top + chestRect.height / 2;
+      const endX = headerRect.left + headerRect.width / 2;
+      const endY = headerRect.top + headerRect.height / 2;
+      setCoinAnim({ x: startX, y: startY, dx: endX - startX, dy: endY - startY, earned });
       requestAnimationFrame(() => setFly(true));
       setTimeout(() => { setFly(false); setCoinAnim(null); }, 3000);
     });
@@ -114,7 +114,7 @@ export default function Anchorage() {
 
   const goToRound2 = () => {
     if (!window.confirm("⚠️ Enter Round 2 now?\nYou cannot return back to Round 1.")) return;
-    navigate("/map", { replace:true, state:{ ship:selectedShip, kriyaID } });
+    navigate("/codequest/map", { replace: true, state: { ship: selectedShip, kriyaID } });
   };
 
   return (
@@ -124,7 +124,7 @@ export default function Anchorage() {
           <h2 className="ship-title">⚓ {shipName}</h2>
           {selectedShip && (
             <div className="ship-overlay-badge">
-              <img src={selectedShip.img} alt={selectedShip.name}/>
+              <img src={selectedShip.img} alt={selectedShip.name} />
               <div className="ship-overlay-text">
                 <div className="ship-overlay-name">{selectedShip.name}</div>
                 {selectedShip.subtitle && <div className="ship-overlay-sub">{selectedShip.subtitle}</div>}
@@ -137,17 +137,17 @@ export default function Anchorage() {
       </div>
 
       {chests.map(chest => (
-        <div key={chest.id} className={`chest-wrapper ${chest.opened?"opened":""}`} ref={el => chestRefs.current[chest.id]=el}
-          style={{ left:`${chest.left}%`, top:`${chest.top}%`, cursor: chest.opened?"default":"pointer" }}
-          onClick={()=>handleSolve(chest)}>
-          <img src={chest.opened?"/opens.png":"/locked.png"} alt="chest" className="chest"/>
+        <div key={chest.id} className={`chest-wrapper ${chest.opened ? "opened" : ""}`} ref={el => chestRefs.current[chest.id] = el}
+          style={{ left: `${chest.left}%`, top: `${chest.top}%`, cursor: chest.opened ? "default" : "pointer" }}
+          onClick={() => handleSolve(chest)}>
+          <img src={chest.opened ? "/opens.png" : "/locked.png"} alt="chest" className="chest" />
           <div className="chest-name">{chest.name}</div>
         </div>
       ))}
 
       {showCard && pendingCard && (
         <div className="card-overlay" onClick={closeCardPopup}>
-          <div className="algo-modal" onClick={e=>e.stopPropagation()}>
+          <div className="algo-modal" onClick={e => e.stopPropagation()}>
             <h2 className="algo-name">{pendingCard.name}</h2>
             <p className="algo-desc">{pendingCard.description}</p>
             <button className="close-card-btn" onClick={closeCardPopup}>Close</button>
@@ -161,8 +161,8 @@ export default function Anchorage() {
           <button className="round2-btn" onClick={goToRound2}>Round 2 →</button>
         </div>
         <div className="cards-list">
-          {cards.length===0 && <div className="cards-empty">Solve seas to unlock cards…</div>}
-          {cards.map(c=>{
+          {cards.length === 0 && <div className="cards-empty">Solve seas to unlock cards…</div>}
+          {cards.map(c => {
             const key = String(c.id ?? c.name);
             return <div key={key} className="card-chip">
               <span className="chip-icon">{c.icon || "📜"}</span>

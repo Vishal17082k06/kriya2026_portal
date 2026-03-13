@@ -32,8 +32,8 @@ export default function SeaSolve() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!cancelled) setQuestion(data);
-      } catch (err) { if(!cancelled) setMsg(err.message || "Could not load question."); }
-      finally { if(!cancelled) setLoading(false); }
+      } catch (err) { if (!cancelled) setMsg(err.message || "Could not load question."); }
+      finally { if (!cancelled) setLoading(false); }
     }
     loadQuestion();
     return () => { cancelled = true; };
@@ -58,35 +58,35 @@ export default function SeaSolve() {
         const card = data.card ?? null;
         markSeaOpened(seaId, earned, card);
 
-        navigate("/anchorage", {
+        navigate("/codequest/anchorage", {
           replace: true,
           state: { ship: location.state?.ship, kriyaID, reward: { seaId, earned, card } }
         });
       } else setMsg(data.msg || "Wrong answer!");
     } catch (err) { setMsg(err.message || "Network error"); }
-    finally { setSubmitting(false); submitLockRef.current=false; }
+    finally { setSubmitting(false); submitLockRef.current = false; }
   };
 
   const goBack = () => {
-    navigate("/anchorage", { state: { ship: location.state?.ship, kriyaID }, replace:true });
+    navigate("/codequest/anchorage", { state: { ship: location.state?.ship, kriyaID }, replace: true });
   };
 
   return (
     <div className="solve-container">
       <div className="solve-card">
         <button className="back-btn" onClick={goBack}>← Back to Seven Pirate Treasures</button>
-        <h2>Chest {Number.isFinite(seaId)?seaId:"-"}</h2>
+        <h2>Chest {Number.isFinite(seaId) ? seaId : "-"}</h2>
         <p className="team-id-label">Team: {kriyaID}</p>
         {loading && <p>Loading...</p>}
         {!loading && question && (
           <>
             <h3>{question.questionType}</h3>
-            <p style={{whiteSpace:"pre-line"}}>{question.question}</p>
-            {question.imageUrl && <img src={question.imageUrl} alt={`Sea ${question.questionNo}`} className="question-image"/>}
-            {Array.isArray(question.options) && question.options.length>0 &&
-              <div className="options-list">{question.options.map((opt,i)=><div key={i} className="option-item">{opt}</div>)}</div>}
-            <input value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="ENTER OPTIONS (A/B/C/D) OR ANSWER " className="answer-input"/>
-            <button onClick={submitAnswer} disabled={submitting} className="submit-btn">{submitting?"Submitting...":"Submit"}</button>
+            <p style={{ whiteSpace: "pre-line" }}>{question.question}</p>
+            {question.imageUrl && <img src={question.imageUrl} alt={`Sea ${question.questionNo}`} className="question-image" />}
+            {Array.isArray(question.options) && question.options.length > 0 &&
+              <div className="options-list">{question.options.map((opt, i) => <div key={i} className="option-item">{opt}</div>)}</div>}
+            <input value={answer} onChange={e => setAnswer(e.target.value)} placeholder="ENTER OPTIONS (A/B/C/D) OR ANSWER " className="answer-input" />
+            <button onClick={submitAnswer} disabled={submitting} className="submit-btn">{submitting ? "Submitting..." : "Submit"}</button>
           </>
         )}
         {msg && <p className="msg">{msg}</p>}
