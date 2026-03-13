@@ -9,9 +9,9 @@ import obj2 from "../assets/obj2.png";
 import obj3 from "../assets/obj3.png";
 import obj4 from "../assets/obj4.png";
 import shovelImg from "../assets/shovel.png";
+import { API_BASE } from "../config/api";
+import { useGame } from "../context/GameContext";
 import "../styles/mapPage.css";
-
-const API_BASE = "http://localhost:5000/kriyabe/api";
 
 const MapPage = () => {
     const navigate = useNavigate();
@@ -41,10 +41,7 @@ const MapPage = () => {
     const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
     const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
     const [flagInput, setFlagInput] = useState("");
-    const [unlockedActionCards, setUnlockedActionCards] = useState(() => {
-        const saved = localStorage.getItem('kriya_unlocked_actions');
-        return saved ? JSON.parse(saved) : [101, 102, 103, 104];
-    });
+    const [unlockedActionCards, setUnlockedActionCards] = useState([]);
 
     const CHALLENGES = {
         d1: {
@@ -68,31 +65,25 @@ const MapPage = () => {
     const [isR2SolveOpen, setIsR2SolveOpen] = useState(false);
     const [currentR2Index, setCurrentR2Index] = useState(0);
 
-    // Filter available cards from team's round1.selectedScrolls
+    const { cards: gameCards } = useGame();
+
+    // Filter available cards from GameContext
     const availableCards = React.useMemo(() => {
-        if (!team || !team.round1 || !team.round1.selectedScrolls || allAlgoCards.length === 0) return [];
+        if (!gameCards || gameCards.length === 0 || allAlgoCards.length === 0) return [];
         
-        return team.round1.selectedScrolls.map(scroll => {
-            const normalizedName = scroll.name.toLowerCase().replace(/\s+/g, '');
-            const cardInfo = allAlgoCards.find(c => c.name.toLowerCase().replace(/\s+/g, '') === normalizedName);
+        return gameCards.map(c => {
+            const normalizedName = (c.name || '').toLowerCase().replace(/\s+/g, '');
+            const cardInfo = allAlgoCards.find(ac => ac.name.toLowerCase().replace(/\s+/g, '') === normalizedName);
             
             return {
-                id: cardInfo?._id || scroll._id,
-                name: scroll.name,
+                id: cardInfo?._id || c.id,
+                name: c.name,
                 color: "#c9a84c", // Standard gold for algorithm cards
                 realId: cardInfo?._id
             };
         });
-    }, [team, allAlgoCards]);
+    }, [gameCards, allAlgoCards]);
 
-    const actionCards = [
-        { id: 101, name: "Storm", color: "#4b6584", desc: "Create a coastal storm" },
-        { id: 102, name: "Bounty", color: "#f7b731", desc: "Double gold for 1 turn" },
-        { id: 103, name: "Kraken", color: "#eb3b5a", desc: "Summon a sea monster" },
-        { id: 104, name: "Mist", color: "#a5b1c2", desc: "Hide ship movements" },
-        { id: 105, name: "Ghost Ship", color: "#2c3e50", desc: "Become untargetable for 2 turns", isSecret: true },
-        { id: 106, name: "Kraken's Call", color: "#130f40", desc: "Destroy an adjacent enemy ship", isSecret: true }
-    ];
 
     // Island Graph Data - Easy to adjust size and position
     const islands = [
@@ -105,37 +96,61 @@ const MapPage = () => {
     React.useEffect(() => {
         localStorage.setItem('kriya_found_objects', JSON.stringify(foundObjects));
         localStorage.setItem('kriya_target_index', currentTargetIndex.toString());
-        localStorage.setItem('kriya_unlocked_actions', JSON.stringify(unlockedActionCards));
         localStorage.setItem('kriya_selected_cards', JSON.stringify(selectedCards));
         localStorage.setItem('kriya_cards_chosen', cardsChosen.toString());
-    }, [foundObjects, currentTargetIndex, unlockedActionCards, selectedCards, cardsChosen]);
+    }, [foundObjects, currentTargetIndex, selectedCards, cardsChosen]);
 
     // Clear old sync data if it exists
     React.useEffect(() => {
         localStorage.removeItem('kriya_island_config');
-        fetchTeamData();
+        fetchTeamData().then(teamData => {
+            if (teamData) fetchPlayerActionCards(teamData.kriyaID);
+        });
         fetchAlgos();
+        // If cards are already chosen from a previous session, fetch the associated questions for the islands
+        if (cardsChosen && selectedCards.length === 3) {
+            fetchR2Questions(selectedCards);
+        }
     }, []);
+
+    async function fetchPlayerActionCards(kriyaID) {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`${API_BASE}/players/${kriyaID}/cards`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setUnlockedActionCards(data);
+        } catch (err) {
+            console.error("Failed to fetch player action cards", err);
+        }
+    }
 
     async function fetchTeamData() {
         const storedTeam = JSON.parse(localStorage.getItem("team"));
         const token = localStorage.getItem("token");
-        if (!storedTeam || !storedTeam.id) return;
+        if (!storedTeam || (!storedTeam.id && !storedTeam._id)) return null;
+
+        const teamId = storedTeam.id || storedTeam._id;
 
         try {
-            const res = await fetch(`${API_BASE}/teams/profile/${storedTeam.id}`, {
+            const res = await fetch(`${API_BASE}/teams/profile/${teamId}`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
-            if (res.ok) setTeam(data);
+            if (res.ok) {
+                setTeam(data);
+                return data;
+            }
         } catch (err) {
             console.error("Failed to fetch team data", err);
         }
+        return null;
     }
 
     async function fetchAlgos() {
         try {
-            const res = await fetch(`${API_BASE}/algorithms`);
+            const res = await fetch(`${API_BASE}/api/algorithms`);
             const data = await res.json();
             if (res.ok) setAllAlgoCards(data);
         } catch (err) {
@@ -145,7 +160,7 @@ const MapPage = () => {
 
     const fetchR2Questions = async (pickedCards) => {
         try {
-            const res = await fetch(`${API_BASE}/round2/questions`);
+            const res = await fetch(`${API_BASE}/api/round2/questions`);
             const allQuestions = await res.json();
             if (!res.ok) return;
 
@@ -159,8 +174,7 @@ const MapPage = () => {
             // Shuffling or picking top 3
             setR2Questions(filtered.slice(0, 3));
             if (filtered.length > 0) {
-                setIsR2SolveOpen(true);
-                setCurrentR2Index(0);
+               console.log("Loaded questions for islands:", filtered.slice(0,3));
             } else {
                 alert("No questions found for the selected algorithms yet!");
             }
@@ -269,21 +283,79 @@ const MapPage = () => {
         }
     };
 
-    const handleFlagSubmit = (e) => {
+    const handleFlagSubmit = async (e) => {
         e.preventDefault();
         if (!activeChallenge) return;
 
+        const token = localStorage.getItem("token");
+
         if (flagInput.trim() === activeChallenge.flag) {
-            if (!unlockedActionCards.includes(activeChallenge.rewardId)) {
-                setUnlockedActionCards([...unlockedActionCards, activeChallenge.rewardId]);
-                alert(`Success! The ${activeChallenge.rewardName} action card has been unlocked.`);
-            } else {
-                alert("You have already claimed this reward!");
+            try {
+                // Award card via backend
+                const res = await fetch(`${API_BASE}/players/${team.kriyaID}/minigame-complete`, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ baseReward: 10 })
+                });
+                const result = await res.json();
+
+                if (res.ok) {
+                    if (result.card) {
+                        alert(`Success! You have won the ${result.card.name} action card!`);
+                        // Refresh inventory
+                        fetchPlayerActionCards(team.kriyaID);
+                    } else {
+                        alert("Success! You have already claimed all available action cards.");
+                    }
+                } else {
+                    alert(result.msg || "Failed to claim reward.");
+                }
+            } catch (err) {
+                console.error("Error submitting flag", err);
+                alert("An error occurred while claiming your reward.");
             }
             setIsFlagModalOpen(false);
             setFlagInput("");
         } else {
             alert("Incorrect flag! Try again.");
+        }
+    };
+
+    const handleUseCard = async (cardInventoryId, cardName) => {
+        if (!window.confirm(`Are you sure you want to use the ${cardName} card?`)) return;
+
+        const token = localStorage.getItem("token");
+        // We need the ACTUAL card object ID, which is stored in the inventory item's cardId field
+        // But the backend expects cardId in the URL.
+        // Looking at the inventory data structure: { _id, teamId, cardId: { _id, name, ... }, isUsed, ... }
+        
+        const inventoryItem = unlockedActionCards.find(c => c._id === cardInventoryId);
+        if (!inventoryItem) return;
+
+        const cardId = inventoryItem.cardId._id;
+
+        try {
+            const res = await fetch(`${API_BASE}/players/${team.kriyaID}/cards/${cardId}/use`, {
+                method: "POST",
+                headers: { 
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            const result = await res.json();
+
+            if (res.ok) {
+                alert(`Card Activated: ${result.effect}`);
+                // Refresh inventory
+                fetchPlayerActionCards(team.kriyaID);
+            } else {
+                alert(result.msg || "Failed to activate card.");
+            }
+        } catch (err) {
+            console.error("Error using card", err);
+            alert("An error occurred while using the card.");
         }
     };
 
@@ -300,54 +372,73 @@ const MapPage = () => {
         <img src={mapImg} alt="World Map" className="map-background" />
 
         <div className="islands-layer">
-          {islands.map((island) => (
-            <div
-              key={island.id}
-              className={`island-node island-${island.id}`}
-              style={{ top: island.top, left: island.left, cursor: "pointer" }}
-              onClick={() => {
-                if (!isTreasureHunting) {
-                  navigate("/codequest/arena");
-                }
-              }}
-            >
-              <img
-                src={island.img}
-                alt={island.name}
-                className="island-image"
-                style={{ width: island.size || "150px" }}
-              />
-              <div className="island-info">
-                <span className="island-name">{island.name}</span>
-              </div>
-            </div>
-          ))}
-
-                    {/* Decorations Layer */}
-                    {decorations.map(obj => (
-                        <div
-                            key={obj.id}
-                            className={`map-decoration ${foundObjects.includes(obj.id) ? 'found' : 'hidden'} ${CHALLENGES[obj.id] && foundObjects.includes(obj.id) ? 'interactive' : ''}`}
-                            style={{
-                                top: obj.top,
-                                left: obj.left,
-                                width: obj.size
-                            }}
-                            onClick={(e) => {
-                                if (foundObjects.includes(obj.id)) {
-                                    e.stopPropagation();
-                                    handleObjClick(obj.id);
-                                }
-                            }}
-                        >
-                            <img src={obj.img} alt="Map Decoration" className="decoration-image" />
-                            {CHALLENGES[obj.id] && foundObjects.includes(obj.id) && !unlockedActionCards.includes(CHALLENGES[obj.id].rewardId) && (
-                                <div className="interactive-hint">!</div>
-                            )}
-                        </div>
-                    ))}
+          {islands.map((island, idx) => {
+            const hasQuestion = r2Questions[idx] != null;
+            return (
+              <div
+                key={island.id}
+                className={`island-node island-${island.id}`}
+                style={{ top: island.top, left: island.left, cursor: cardsChosen ? "pointer" : "not-allowed", opacity: cardsChosen ? 1 : 0.6 }}
+                onClick={() => {
+                  if (isTreasureHunting) return;
+                  if (!cardsChosen) {
+                      alert("Please choose 3 algorithm cards to chart your course first!");
+                      return;
+                  }
+                  if (hasQuestion && r2Questions[idx]._id) {
+                      navigate(`/codequest/arena`, { state: { problemId: r2Questions[idx]._id, problem: r2Questions[idx] } });
+                  } else {
+                      alert("No quest found for this island based on your scrolls.");
+                  }
+                }}
+              >
+                <img
+                  src={island.img}
+                  alt={island.name}
+                  className="island-image"
+                  style={{ width: island.size || "150px" }}
+                />
+                <div className="island-info">
+                  <span className="island-name">{island.name}</span>
+                  {cardsChosen && hasQuestion && <span style={{fontSize: '0.7rem', color: '#c9a84c', display: 'block'}}>⚔️ Quest Ready</span>}
                 </div>
-            </div>
+              </div>
+            );
+          })}
+
+                        {/* Decorations Layer */}
+                        {decorations.map(obj => {
+                            const challenge = CHALLENGES[obj.id];
+                            // Check if team already has this reward (simplified: if they have any card for this challenge)
+                            // Since rewards are random, it's hard to track per-challenge. 
+                            // For now, let's just show '!' if it's an interactive object.
+                            const isInteractive = challenge && foundObjects.includes(obj.id);
+                            
+                            return (
+                                <div
+                                    key={obj.id}
+                                    className={`map-decoration ${foundObjects.includes(obj.id) ? 'found' : 'hidden'} ${isInteractive ? 'interactive' : ''}`}
+                                    style={{
+                                        top: obj.top,
+                                        left: obj.left,
+                                        width: obj.size
+                                    }}
+                                    onClick={(e) => {
+                                        if (foundObjects.includes(obj.id)) {
+                                            e.stopPropagation();
+                                            handleObjClick(obj.id);
+                                        }
+                                    }}
+                                >
+                                    <img src={obj.img} alt="Map Decoration" className="decoration-image" />
+                                    {isInteractive && (
+                                        <div className="interactive-hint">!</div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
 
       <nav className="card-navbar">
         <div className="navbar-left">
@@ -485,23 +576,27 @@ const MapPage = () => {
                     <div className="popup-content action-popup">
                         <h2>Action Cards</h2>
                         <div className="action-cards-grid">
-                            {actionCards.filter(card => unlockedActionCards.includes(card.id)).map((card) => (
-                                <div key={card.id} className="action-card-item">
-                                    <div className="action-card-visual" style={{ backgroundColor: card.color }}>
-                                        <span className="action-card-name">{card.name}</span>
+                            {unlockedActionCards.length > 0 ? (
+                                unlockedActionCards.map((item) => (
+                                    <div key={item._id} className="action-card-item">
+                                        <div className="action-card-visual" style={{ backgroundColor: "#2c3e50" }}>
+                                            <span className="action-card-name">{item.cardId.name}</span>
+                                        </div>
+                                        <p className="action-card-desc">{item.cardId.description}</p>
+                                        <button 
+                                            className="use-card-btn"
+                                            onClick={() => handleUseCard(item._id, item.cardId.name)}
+                                        >
+                                            USE
+                                        </button>
                                     </div>
-                                    <p className="action-card-desc">{card.desc}</p>
+                                ))
+                            ) : (
+                                <div className="no-cards-msg">
+                                    <p>No action cards collected yet.</p>
+                                    <p>Find treasure and solve challenges to unlock them!</p>
                                 </div>
-                            ))}
-                            {actionCards.filter(card => !unlockedActionCards.includes(card.id)).map((card) => (
-                                <div key={card.id} className="action-card-item locked">
-                                    <div className="action-card-visual locked">
-                                        <span className="action-card-name">???</span>
-                                        <div className="lock-icon">🔒</div>
-                                    </div>
-                                    <p className="action-card-desc">Complete the objective challenge to unlock</p>
-                                </div>
-                            ))}
+                            )}
                         </div>
                         <div className="popup-actions">
                             <button className="confirm-btn" onClick={() => setIsActionPopupOpen(false)}>
@@ -553,52 +648,7 @@ const MapPage = () => {
                 </div>
             )}
 
-            {isR2SolveOpen && r2Questions[currentR2Index] && (
-                <div className="popup-overlay">
-                    <div className="popup-content r2-solve-modal" style={{ maxWidth: '800px', width: '90%' }}>
-                        <div className="modal-header">
-                            <span className="quest-count" style={{ display: 'block', color: '#c9a84c', fontSize: '0.8rem', letterSpacing: '2px', marginBottom: '10px' }}>
-                                QUESTION {currentR2Index + 1} OF {r2Questions.length}
-                            </span>
-                            <h2 style={{ fontSize: '2rem', margin: '0' }}>{r2Questions[currentR2Index].title}</h2>
-                        </div>
-                        <div className="modal-body" style={{ marginTop: '20px' }}>
-                            <div className="problem-desc" style={{ 
-                                whiteSpace: 'pre-line', 
-                                textAlign: 'left', 
-                                background: 'rgba(0,0,0,0.4)', 
-                                padding: '25px', 
-                                borderRadius: '15px',
-                                border: '1px solid rgba(201, 168, 76, 0.2)',
-                                lineHeight: '1.6',
-                                fontSize: '1.1rem',
-                                maxHeight: '400px',
-                                overflowY: 'auto',
-                                color: '#e6edf3'
-                            }}>
-                                {r2Questions[currentR2Index].description}
-                            </div>
-                            
-                            <div className="problem-meta" style={{ marginTop: '20px', display: 'flex', gap: '30px', fontSize: '1rem', color: '#c9a84c' }}>
-                                <span>⏱️ Time Limit: <strong>{r2Questions[currentR2Index].timeLimitSec}s</strong></span>
-                                <span>🧪 Test Cases: <strong>{r2Questions[currentR2Index].testCases?.length || 0}</strong></span>
-                            </div>
-                        </div>
-                        <div className="popup-actions" style={{ marginTop: '40px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                            {currentR2Index < r2Questions.length - 1 ? (
-                                <button className="confirm-btn" onClick={() => setCurrentR2Index(currentR2Index + 1)}>Next Problem ➔</button>
-                            ) : (
-                                <button className="confirm-btn" onClick={() => {
-                                    setIsR2SolveOpen(false);
-                                    setCardsChosen(false);
-                                    setSelectedCards([]);
-                                }}>Complete Set 🏅</button>
-                            )}
-                            <button className="cancel-btn" onClick={() => setIsR2SolveOpen(false)}>Back to Map</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };
