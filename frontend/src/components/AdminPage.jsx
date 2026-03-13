@@ -1,4 +1,6 @@
-import { API_BASE as BASE_URL } from "../config/api";
+import React, { useState, useEffect } from "react";
+import { API_BASE as BASE_URL, API_BASE } from "../config/api";
+import "../styles/adminPage.css";
 
 const ADMIN_API = `${BASE_URL}/api/admin`;
 
@@ -35,6 +37,7 @@ const AdminPage = () => {
     });
 
     const [algorithmCards, setAlgorithmCards] = useState([]);
+    const [actionCards, setActionCards] = useState([]);
 
     // Auth state
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("adminToken"));
@@ -45,22 +48,20 @@ const AdminPage = () => {
     const [pointsInput, setPointsInput] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
 
-    const ALL_ALGO_CARDS = []; // Empty as per backend
-    const ALL_ACTION_CARDS = []; // Empty as per backend
-
     useEffect(() => {
         if (isLoggedIn) {
             fetchTeams();
             fetchRound1Questions();
             fetchRound2Questions();
             fetchAlgorithmCards();
+            fetchActionCards();
         }
     }, [isLoggedIn]);
 
     const fetchAlgorithmCards = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const res = await fetch(`${API_BASE}/algorithmcard`, {
+            const res = await fetch(`${ADMIN_API}/algorithmcard`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
@@ -70,10 +71,23 @@ const AdminPage = () => {
         }
     };
 
+    const fetchActionCards = async () => {
+        try {
+            const token = localStorage.getItem("adminToken");
+            const res = await fetch(`${API_BASE}/api/action-cards`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setActionCards(data);
+        } catch (err) {
+            console.error("Failed to fetch action cards", err);
+        }
+    };
+
     const fetchRound2Questions = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const res = await fetch(`${API_BASE}/round2/questions`, {
+            const res = await fetch(`${ADMIN_API}/round2/questions`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
@@ -307,8 +321,8 @@ const AdminPage = () => {
         const token = localStorage.getItem("adminToken");
         const method = editingR2Id ? "PUT" : "POST";
         const url = editingR2Id 
-            ? `${API_BASE}/round2/questions/${editingR2Id}` 
-            : `${API_BASE}/round2/questions`;
+            ? `${ADMIN_API}/round2/questions/${editingR2Id}` 
+            : `${ADMIN_API}/round2/questions`;
 
         try {
             const res = await fetch(url, {
@@ -359,7 +373,7 @@ const AdminPage = () => {
         if (!window.confirm("Delete this Round 2 question?")) return;
         const token = localStorage.getItem("adminToken");
         try {
-            const res = await fetch(`${API_BASE}/round2/questions/${id}`, {
+            const res = await fetch(`${ADMIN_API}/round2/questions/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -642,15 +656,15 @@ const AdminPage = () => {
                                     <span className="limit-count">{editingTeam.algoCards.length}/3 Slots Used</span>
                                 </div>
                                 <div className="card-pill-grid">
-                                    {ALL_ALGO_CARDS.map(card => {
-                                        const active = editingTeam.algoCards.includes(card);
+                                    {algorithmCards.map(card => {
+                                        const active = editingTeam.algoCards.includes(card.name);
                                         return (
                                             <button
-                                                key={card}
+                                                key={card._id}
                                                 className={`action-pill algo ${active ? 'active' : ''}`}
-                                                onClick={() => toggleCard(editingTeam.id, 'algoCards', card, 3)}
+                                                onClick={() => toggleCard(editingTeam.id, 'algoCards', card.name, 3)}
                                             >
-                                                {card} {active ? '✓' : '+'}
+                                                {card.name} {active ? '✓' : '+'}
                                             </button>
                                         );
                                     })}
@@ -663,15 +677,15 @@ const AdminPage = () => {
                                     <span className="limit-count">{editingTeam.actionCards.length}/4 Slots Used</span>
                                 </div>
                                 <div className="card-pill-grid">
-                                    {ALL_ACTION_CARDS.map(card => {
-                                        const active = editingTeam.actionCards.includes(card);
+                                    {actionCards.map(card => {
+                                        const active = editingTeam.actionCards.includes(card.name);
                                         return (
                                             <button
-                                                key={card}
+                                                key={card._id}
                                                 className={`action-pill ${active ? 'active' : ''}`}
-                                                onClick={() => toggleCard(editingTeam.id, 'actionCards', card, 4)}
+                                                onClick={() => toggleCard(editingTeam.id, 'actionCards', card.name, 4)}
                                             >
-                                                {card} {active ? '✓' : '+'}
+                                                {card.name} {active ? '✓' : '+'}
                                             </button>
                                         );
                                     })}
