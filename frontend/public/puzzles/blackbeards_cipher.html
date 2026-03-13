@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackbeard's Triple Compass — Expert Level</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=MedievalSharp&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #c9a84c;
+            --bronze: #8a7a4a;
+            --dark-oil: #070d1a;
+            --parchment: #e4d5b7;
+            --ink: #2a1b0a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, #1a1005 0%, #070401 100%);
+            font-family: 'MedievalSharp', cursive;
+            color: var(--gold);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Smoke/Mist */
+        .fog {
+            position: fixed;
+            width: 100vw; height: 100vh;
+            background: url('https://www.transparenttextures.com/patterns/dust.png');
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .game-header { text-align: center; margin-bottom: 1.5rem; z-index: 5; }
+        h1 { font-family: 'Pirata One', cursive; font-size: 3rem; letter-spacing: 2px; }
+
+        /* Parchment UI */
+        .dispatch {
+            background: var(--parchment);
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            width: 90%; max-width: 500px;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid #c4b497;
+            position: relative;
+            z-index: 5;
+        }
+
+        .dispatch-line {
+            font-family: 'Pirata One', cursive;
+            font-size: 2.2rem;
+            color: var(--ink);
+            margin: 0.5rem 0;
+            letter-spacing: 3px;
+            min-height: 3rem;
+            transition: filter 0.3s, opacity 0.3s;
+        }
+
+        /* "Ghosting" effect - text is blurred unless close to solution */
+        .blurry { filter: blur(4px); opacity: 0.4; }
+
+        /* Nautical Compass UI */
+        .compass-container {
+            position: relative;
+            width: 400px; height: 400px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5;
+            user-select: none;
+        }
+
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s ease-out, border-color 0.3s;
+            cursor: grab;
+            border-style: solid;
+        }
+
+        .ring:active { cursor: grabbing; }
+
+        .ring-outer {
+            width: 100%; height: 100%;
+            border-width: 8px; border-color: var(--bronze);
+            background: rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .ring-middle {
+            width: 70%; height: 70%;
+            border-width: 6px; border-color: #5d4a35;
+            background: rgba(0,0,0,0.3);
+            z-index: 3;
+        }
+
+        .ring-inner {
+            width: 40%; height: 40%;
+            border-width: 4px; border-color: var(--gold);
+            background: #1a1108;
+            z-index: 4;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .label {
+            position: absolute;
+            font-weight: bold;
+            color: var(--gold);
+            pointer-events: none;
+        }
+
+        .indicator {
+            position: absolute;
+            top: -20px; left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--gold);
+            z-index: 10;
+            filter: drop-shadow(0 0 5px var(--gold));
+        }
+
+        /* Selection Glow */
+        .ring.focused { border-color: var(--gold-bright) !important; box-shadow: 0 0 15px var(--gold); }
+
+        .victory-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 100; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(15px);
+        }
+
+        .victory-overlay.active { display: flex; animation: fadeIn 1s ease; }
+
+        .flag-box {
+            background: rgba(201, 168, 76, 0.1);
+            border: 2px solid var(--gold);
+            padding: 3rem; border-radius: 12px;
+            text-align: center; margin-top: 2rem;
+            box-shadow: 0 0 50px rgba(201,168,76,0.2);
+        }
+
+        .btn {
+            background: var(--gold); color: #000;
+            padding: 1rem 2.5rem; border: none;
+            font-family: 'Pirata One'; font-size: 1.5rem;
+            cursor: pointer; margin-top: 2rem;
+            transition: 0.3s; border-radius: 5px;
+        }
+
+        .instruction {
+            margin-top: 1rem; color: #5a5a6a;
+            font-size: 0.8rem; text-transform: uppercase;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="fog"></div>
+
+    <header class="game-header">
+        <h1>Blackbeard's Triple Compass</h1>
+        <p style="color: #8a7a4a; letter-spacing: 2px;">Synchronize the gears to decode the dispatch</p>
+    </header>
+
+    <div class="dispatch">
+        <div id="line1" class="dispatch-line blurry">CIPHER 1</div>
+        <div id="line2" class="dispatch-line blurry">CIPHER 2</div>
+        <div id="line3" class="dispatch-line blurry">CIPHER 3</div>
+    </div>
+
+    <div class="compass-container">
+        <div class="indicator"></div>
+        
+        <!-- Outer Ring -->
+        <div class="ring ring-outer" id="ringOuter" data-id="0"></div>
+        
+        <!-- Middle Ring -->
+        <div class="ring ring-middle" id="ringMiddle" data-id="1"></div>
+        
+        <!-- Inner Ring -->
+        <div class="ring ring-inner" id="ringInner" data-id="2"></div>
+    </div>
+
+    <p class="instruction">Drag a ring to rotate · Gear synchronization active</p>
+
+    <div class="victory-overlay" id="victoryOverlay">
+        <h2 style="font-family: 'Pirata One'; font-size: 4rem;">MASTER DECODED!</h2>
+        <div class="flag-box">
+            <span style="font-size: 1rem; color: var(--bronze);">ANCIENT NAVIGATOR FLAG:</span>
+            <span style="display: block; font-size: 2.5rem; color: #fff; margin-top: 1rem; text-shadow: 0 0 10px gold;" id="finalFlag">FLAG{C1ph3r_M4st3r_B1ackb3ard}</span>
+        </div>
+        <button class="btn" onclick="window.location.reload()">Reset Gearbox</button>
+    </div>
+
+    <script>
+        const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        
+        // Puzzle Data
+        const PARCHMENT = [
+            { original: "XLI QET MW", target: "THE MAP IS", shift: 4 },     // Outer
+            { original: "OPKKLU PU", target: "HIDDEN IN", shift: -7 },   // Middle
+            { original: "IYDQKFEHU", target: "TORTUGA!!", shift: 10 }     // Inner
+        ];
+
+        let state = {
+            rotations: [0, 0, 0], // outer, middle, inner
+            activeRing: null,
+            isDragging: false,
+            startAngle: 0
+        };
+
+        const rings = [
+            document.getElementById('ringOuter'),
+            document.getElementById('ringMiddle'),
+            document.getElementById('ringInner')
+        ];
+
+        const lines = [
+            document.getElementById('line1'),
+            document.getElementById('line2'),
+            document.getElementById('line3')
+        ];
+
+        function init() {
+            // Populate Ring Labels
+            rings.forEach((ring, rIdx) => {
+                const radius = rIdx === 0 ? 180 : rIdx === 1 ? 120 : 65;
+                for (let i = 0; i < 26; i++) {
+                    const label = document.createElement('div');
+                    label.className = 'label';
+                    label.textContent = ALPHABET[i];
+                    label.style.fontSize = rIdx === 2 ? '0.9rem' : '1.2rem';
+                    const angle = (i / 26) * 360;
+                    label.style.transform = `rotate(${angle}deg) translateY(-${radius}px)`;
+                    ring.appendChild(label);
+                }
+            });
+
+            // Randomize starting positions
+            state.rotations = [
+                Math.floor(Math.random() * 26) * (360/26),
+                Math.floor(Math.random() * 26) * (360/26),
+                Math.floor(Math.random() * 26) * (360/26)
+            ];
+            updateVisuals();
+        }
+
+        function getShift(rot) {
+            let norm = (rot % 360);
+            if (norm < 0) norm += 360;
+            const step = 360 / 26;
+            return Math.round((26 - (norm / step)) % 26);
+        }
+
+        function decrypt(text, currentShift, targetShift) {
+            let res = "";
+            const diff = (currentShift - (targetShift < 0 ? 26 + targetShift : targetShift) + 26) % 26;
+            
+            // For ghosting check
+            const isNear = diff === 0;
+
+            for(let char of text) {
+                if (char === " " || char === "!") { res += char; continue; }
+                const idx = ALPHABET.indexOf(char);
+                let newIdx = (idx - currentShift + 26) % 26;
+                res += ALPHABET[newIdx];
+            }
+            return { text: res, isNear };
+        }
+
+        function updateVisuals() {
+            let allCorrect = true;
+
+            rings.forEach((ring, i) => {
+                ring.style.transform = `rotate(${state.rotations[i]}deg)`;
+                
+                const currentShift = getShift(state.rotations[i]);
+                const { text, isNear } = decrypt(PARCHMENT[i].original, currentShift, PARCHMENT[i].shift);
+                
+                lines[i].textContent = text;
+                
+                // Toggle blur based on proximity to correct shift
+                if (isNear) {
+                    lines[i].classList.remove('blurry');
+                } else {
+                    lines[i].classList.add('blurry');
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                setTimeout(() => {
+                    document.getElementById('victoryOverlay').classList.add('active');
+                }, 800);
+            }
+        }
+
+        function getAngle(e, ringEl) {
+            const rect = ringEl.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return Math.atan2(clientY - centerY, clientX - centerX) * 180 / Math.PI;
+        }
+
+        // Add Listeners
+        rings.forEach(ring => {
+            const startHandler = (e) => {
+                state.isDragging = true;
+                state.activeRing = parseInt(ring.dataset.id);
+                state.startAngle = getAngle(e, ring) - state.rotations[state.activeRing];
+                rings.forEach(r => r.classList.remove('focused'));
+                ring.classList.add('focused');
+            };
+
+            ring.addEventListener('mousedown', startHandler);
+            ring.addEventListener('touchstart', startHandler);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!state.isDragging) return;
+            const ringEl = rings[state.activeRing];
+            const newAngle = getAngle(e, ringEl) - state.startAngle;
+            const delta = newAngle - state.rotations[state.activeRing];
+            
+            state.rotations[state.activeRing] = newAngle;
+
+            // --- Synchronized Gear Logic ---
+            if (state.activeRing === 0) { // Moving Outer
+                state.rotations[1] += delta * 1.5; // Middle moves faster
+            } else if (state.activeRing === 1) { // Moving Middle
+                state.rotations[2] -= delta * 0.5; // Inner moves slower counter-clockwise
+                state.rotations[0] += delta * 0.2; // Outer moves slightly
+            }
+
+            updateVisuals();
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!state.isDragging) return;
+            // Similar logic for touch
+            const ringEl = rings[state.activeRing];
+            const newAngle = getAngle(e, ringEl) - state.startAngle;
+            const delta = newAngle - state.rotations[state.activeRing];
+            state.rotations[state.activeRing] = newAngle;
+            if (state.activeRing === 0) state.rotations[1] += delta * 1.5;
+            else if (state.activeRing === 1) {
+                state.rotations[2] -= delta * 0.5;
+                state.rotations[0] += delta * 0.2;
+            }
+            updateVisuals();
+        });
+
+        window.addEventListener('mouseup', () => state.isDragging = false);
+        window.addEventListener('touchend', () => state.isDragging = false);
+
+        init();
+    </script>
+</body>
+</html>

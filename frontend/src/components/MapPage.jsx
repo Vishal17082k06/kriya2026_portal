@@ -58,6 +58,13 @@ const MapPage = () => {
             flag: "FLAG{R1ng_Puzzl3_Mast3r_2026}",
             rewardId: 106,
             rewardName: "Kraken's Call"
+        },
+        d3: {
+            title: "Blackbeard's Hidden Dispatch",
+            url: "/puzzles/blackbeards_cipher.html",
+            flag: "FLAG{C1ph3r_M4st3r_B1ackb3ard}",
+            rewardId: 107,
+            rewardName: "Blackbeard's Favor"
         }
     };
 
