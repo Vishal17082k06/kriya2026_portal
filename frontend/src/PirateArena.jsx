@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import MonacoEditor from "@monaco-editor/react";
 
 import { submitToJudge } from "./utils/judge0";
+import { API_BASE } from "./config/api";
 import "./PirateArena.css";
 
 /* ================================================================
@@ -601,7 +602,6 @@ function GameOverOverlay({ onRestart }) {
 /* ================================================================
    5. MAIN COMPONENT
    ================================================================ */
-const MAX_LIVES = 3;
 let LOG_ID = 0;
 
 export default function PirateArena({ problemId = 1, onBack }) {
@@ -636,8 +636,39 @@ export default function PirateArena({ problemId = 1, onBack }) {
   const [language, setLanguage] = useState("python");
   const [code, setCode] = useState("");
 
-  const [lives, setLives] = useState(MAX_LIVES);
+  const [maxLives, setMaxLives] = useState(3);
+  const [lives, setLives] = useState(3);
   const [bounty, setBounty] = useState(0);
+
+  useEffect(() => {
+    async function fetchLives() {
+      const storedTeam = JSON.parse(localStorage.getItem("team") || "{}");
+      const teamId = storedTeam.id || storedTeam._id || storedTeam.kriyaID || storedTeam.kriyaId || storedTeam.kriyaid;
+      const token = localStorage.getItem("token");
+      if (!teamId || !token) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/teams/profile/${teamId}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.round2 && data.round2.problemsStatus) {
+            const thisProblemId = problem?.id || problem?._id;
+            const pStatus = data.round2.problemsStatus.find(p => p.problemId === thisProblemId || (p.problemId && p.problemId._id === thisProblemId));
+            if (pStatus) {
+              const currentLives = Math.max(0, pStatus.livesLeft + (pStatus.bonusLives || 0));
+              setLives(currentLives);
+              setMaxLives(Math.max(currentLives, 3));
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching lives", e);
+      }
+    }
+    fetchLives();
+  }, [problem]);
   const [gameOver, setGameOver] = useState(false);
   const [solved, setSolved] = useState(new Set());
 
@@ -771,8 +802,10 @@ export default function PirateArena({ problemId = 1, onBack }) {
       compilationError,
       score,
       message,
+      effectApplied,
     } = submission;
 
+    if (effectApplied) addLog("system", `⚡ ${effectApplied}`);
     if (message) addLog("info", message);
 
     if (verdict === "ACCEPTED") {
@@ -805,6 +838,28 @@ export default function PirateArena({ problemId = 1, onBack }) {
           "fail",
           `💀 WRONG ANSWER — ${passedTestCases}/${totalTestCases} test cases passed. The ship be takin' on water!`,
         );
+
+        // Show details of the first failing test case if available
+        if (submission.testResults) {
+          const failedCase = submission.testResults.find((r) => !r.passed);
+          if (failedCase) {
+            const idx = submission.testResults.indexOf(failedCase);
+            addLog("warn", `◈ Failed at Test Case #${idx + 1}:`);
+            addLog("info", `  › Input: ${failedCase.input}`);
+            addLog("info", `  › Expected: ${failedCase.expectedOutput}`);
+            addLog("info", `  › Actual: ${failedCase.actualOutput || '(no output)'}`);
+            if (failedCase.stderr) {
+              const errLines = failedCase.stderr.split('\\n').filter(l => l.trim()).slice(0, 3);
+              if (errLines.length) {
+                addLog("error", `  › Error Output:`);
+                errLines.forEach(line => addLog("error", `    ${line}`));
+              }
+            }
+            if (failedCase.status && failedCase.status !== "Wrong Answer") {
+              addLog("info", `  › Status: ${failedCase.status}`);
+            }
+          }
+        }
       }
 
       // Sync lives with backend if provided, else decrement locally
@@ -844,7 +899,7 @@ export default function PirateArena({ problemId = 1, onBack }) {
   ]);
   /* Restart */
   const handleRestart = useCallback(() => {
-    setLives(MAX_LIVES);
+    setLives(maxLives);
     setBounty(0);
     setGameOver(false);
     setSolved(new Set());
@@ -853,7 +908,7 @@ export default function PirateArena({ problemId = 1, onBack }) {
     clearLogs();
     addLog("system", "⚓ A new voyage begins! Good luck, Captain.");
     setTimeout(() => editorRef.current?.focus(), 100);
-  }, [clearLogs, addLog]);
+  }, [clearLogs, addLog, maxLives]);
 
   /* Reset code */
   const handleReset = useCallback(() => {
@@ -892,7 +947,7 @@ export default function PirateArena({ problemId = 1, onBack }) {
         bounty={bounty}
         shatterIdx={shatterIdx}
         spinning={spinning}
-        maxLives={MAX_LIVES}
+        maxLives={maxLives}
       />
 
       <div className="pa-split">

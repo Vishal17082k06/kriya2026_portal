@@ -144,11 +144,11 @@ const MapPage = () => {
     async function fetchPlayerActionCards(kriyaID) {
         const token = localStorage.getItem("token");
         try {
-            const res = await fetch(`${API_BASE}/api/players/${kriyaID}/cards`, {
+            const res = await fetch(`${API_BASE}/api/actionCards/claimed/${kriyaID}`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
-            if (res.ok) setUnlockedActionCards(data);
+            if (res.ok) setUnlockedActionCards(data.claimedActionCards || []);
         } catch (err) {
             console.error("Failed to fetch player action cards", err);
         }
@@ -293,11 +293,31 @@ const MapPage = () => {
     }
   };
 
-    const handleConfirmSelection = () => {
+    const handleConfirmSelection = async () => {
         if (selectedCards.length === 3) {
-            setCardsChosen(true);
-            setIsPopupOpen(false);
-            fetchR2Questions(selectedCards);
+            const token = localStorage.getItem("token");
+            try {
+                // Initialize Round 2 session on backend
+                const res = await fetch(`${API_BASE}/api/teams/round2answers`, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                
+                if (res.ok) {
+                    setCardsChosen(true);
+                    setIsPopupOpen(false);
+                    fetchR2Questions(selectedCards);
+                } else {
+                    const data = await res.json();
+                    alert(data.msg || "Failed to initialize Round 2 session.");
+                }
+            } catch (err) {
+                console.error("Error initializing Round 2", err);
+                alert("Network error. Could not chart your course.");
+            }
         }
     };
 
@@ -361,7 +381,7 @@ const MapPage = () => {
         }
     };
 
-    const handleUseCard = async (cardInventoryId, cardName) => {
+    const handleUseCard = async (cardName) => {
         if (!window.confirm(`Are you sure you want to use the ${cardName} card?`)) return;
 
         const token = localStorage.getItem("token");
@@ -373,26 +393,23 @@ const MapPage = () => {
             return;
         }
 
-        const inventoryItem = unlockedActionCards.find(c => c._id === cardInventoryId);
-        if (!inventoryItem) return;
-
-        const cardId = inventoryItem.cardId._id || inventoryItem.cardId;
-
         try {
-            const res = await fetch(`${API_BASE}/api/players/${kriyaID}/cards/${cardId}/use`, {
+            const res = await fetch(`${API_BASE}/api/actionCards/activate/${kriyaID}`, {
                 method: "POST",
                 headers: { 
+                    "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
-                }
+                },
+                body: JSON.stringify({ cardName })
             });
             const result = await res.json();
 
             if (res.ok) {
-                alert(`Card Activated: ${result.effect}`);
+                alert(`Card Activated: ${result.message}`);
                 // Refresh inventory
                 fetchPlayerActionCards(kriyaID);
             } else {
-                alert(result.msg || "Failed to activate card.");
+                alert(result.msg || result.message || "Failed to activate card.");
             }
         } catch (err) {
             console.error("Error using card", err);
@@ -618,15 +635,15 @@ const MapPage = () => {
                         <h2>Action Cards</h2>
                         <div className="action-cards-grid">
                             {unlockedActionCards.length > 0 ? (
-                                unlockedActionCards.map((item) => (
-                                    <div key={item._id} className="action-card-item">
+                                unlockedActionCards.map((item, index) => (
+                                    <div key={index} className="action-card-item">
                                         <div className="action-card-visual" style={{ backgroundColor: "#2c3e50" }}>
-                                            <span className="action-card-name">{item.cardId.name}</span>
+                                            <span className="action-card-name">{item.name}</span>
                                         </div>
-                                        <p className="action-card-desc">{item.cardId.description}</p>
+                                        <p className="action-card-desc">{item.description}</p>
                                         <button 
                                             className="use-card-btn"
-                                            onClick={() => handleUseCard(item._id, item.cardId.name)}
+                                            onClick={() => handleUseCard(item.name)}
                                         >
                                             USE
                                         </button>

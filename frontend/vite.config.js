@@ -6,12 +6,6 @@ export default defineConfig({
     plugins: [react()],
     server: {
         host: '0.0.0.0',
-        port: 5173,
-        proxy: {
-            '/kriyabe/api': {
-                target: 'http://localhost:8001',
-                changeOrigin: true,
-            }
-        }
+        port: 5173
     }
 })

@@ -107,19 +107,24 @@ function simulateResult(code, testCases) {
 
   // Simple heuristic: if code has keywords, pass more tests
   const hasLogic = /return|def |function |class |for |while |if /i.test(code);
-  const passRate = hasLogic ? 0.75 : 0.25;
+  const passRate = hasLogic ? 0.8 : 0.4; // Slightly better odds for demo
 
   const results = testCases.map((tc, idx) => {
     const passed = Math.random() < passRate;
+    const isHidden = tc.isHidden || false;
+
     return {
       id: idx + 1,
+      passed,
       status: passed ? "pass" : "fail",
-      input: JSON.stringify(tc.input),
-      expected: JSON.stringify(tc.expected),
-      actual: passed ? JSON.stringify(tc.expected) : JSON.stringify(null),
+      input: isHidden ? "[HIDDEN]" : String(tc.input),
+      expected: isHidden ? "[HIDDEN]" : String(tc.expected),
+      actual: isHidden ? "[HIDDEN]" : (passed ? String(tc.expected) : "null"),
       time: `${(Math.random() * 80 + 20).toFixed(0)}ms`,
       memory: `${(Math.random() * 10 + 8).toFixed(1)}MB`,
+      isHidden
     };
+
   });
 
   const passed = results.filter((r) => r.status === "pass").length;
@@ -129,13 +134,18 @@ function simulateResult(code, testCases) {
     verdict: allPassed ? "ACCEPTED" : "WRONG_ANSWER",
     passedTestCases: passed,
     totalTestCases: results.length,
-    results,
+    testResults: results.map(r => ({
+      ...r,
+      actualOutput: r.actual,
+      expectedOutput: r.expected
+    })),
     message: allPassed
       ? `⚓ All ${passed}/${results.length} test cases passed! Hoist the colours!`
       : `💀 ${passed}/${results.length} passed. The ship be takin' on water!`,
     score: Math.round((passed / results.length) * 100),
   };
 }
+
 
 // ─── Main Export: submitToJudge ────────────────
 // This is the function you wire up to the Submit button.
@@ -178,13 +188,13 @@ export async function submitToJudge(
     };
   }
 
-  // If backend API exists, forward the submission to it and let it handle Judge0.
+  // Forward the submission to the backend API and let it handle Judge0.
   if (API_BASE) {
     try {
       const body = {
         teamId: options.teamId,
         kriyaID: options.kriyaID,
-        problemId: problem.id,
+        problemId: problem.id || problem._id,
         language: language.toUpperCase(),
         language_id: languageId,
         code,
@@ -204,18 +214,11 @@ export async function submitToJudge(
 
       return data.submission || data;
     } catch (e) {
-      console.warn("Backend submission failed, falling back to simulation:", e.message);
-      // Fall back to simulation when backend fails
-      const latency = Math.random() * 1200 + 800;
-      await delay(latency);
-      return simulateResult(code, testCases);
+      throw new Error(`Failed to submit code: ${e.message}`);
     }
   }
 
-  // Fallback: simulate a Judge0 run locally (for demos without backend)
-  const latency = Math.random() * 1200 + 800;
-  await delay(latency);
-  return simulateResult(code, testCases);
+  throw new Error("API_BASE is not defined! Cannot submit code.");
 }
 
 // ─── Run Code (no eval, just format feedback) ─
