@@ -55,6 +55,10 @@ function OtpPage() {
             if (!res.ok || (data.success !== undefined && data.success === false)) {
                 setError(data.message || "Invalid OTP. Please try again.");
             } else {
+                // Success - Store token and team info
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("team", JSON.stringify(data.team));
+
                 console.log("OTP Verification Success. Redirecting...");
                 setSuccess(true);
                 // navigate to ship landing after brief success message

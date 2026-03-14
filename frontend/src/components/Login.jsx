@@ -41,17 +41,37 @@ function Login({ onLoginSuccess }) {
             if (!data.success) {
                 setError(data.message)
             } else {
+                // Identity verified, now trigger OTP
+                try {
+                    const otpRes = await fetch(`${API_BASE}/api/otp/send-otp`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ kriyaID: kriyaId }) 
+                    })
 
-                // Clear previous session data to prevent carryover from other teams
-                localStorage.clear();
-                sessionStorage.clear();
+                    const otpData = await otpRes.json();
 
-                // store team info and token for later pages
-                localStorage.setItem("team", JSON.stringify(data.team))
-                localStorage.setItem("token", data.token)
-                
-                // Skip OTP for development
-                navigate("/codequest/shiplanding");
+                    if (otpRes.ok) {
+                        // Clear any old session data
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        
+                        // Navigate to OTP page with state
+                        navigate("/codequest/otp", { 
+                            state: { 
+                                email: email, 
+                                kriyaId: kriyaId 
+                            } 
+                        });
+                    } else {
+                        setError(otpData.message || "Failed to send OTP. Please try again.");
+                    }
+                } catch (otpErr) {
+                    console.error("OTP Send Exception:", otpErr);
+                    setError("Identity verified, but failed to send OTP. Please try again.");
+                }
             }
 
         } catch (err) {
