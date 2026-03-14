@@ -72,7 +72,7 @@ const ProtectedRoute = ({ children, round }) => {
     }
 
     if (!isAuthorized) {
-        return <Navigate to="/codequest/login" state={{ from: location }} replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     // Logic: If user is in Round 2, they cannot go back to Round 1 pages
@@ -80,7 +80,7 @@ const ProtectedRoute = ({ children, round }) => {
     
     if (inRound2 && isRound1Page) {
         console.warn("Attempted to access Round 1 while in Round 2. Redirecting to Map.");
-        return <Navigate to="/codequest/map" replace />;
+        return <Navigate to="/map" replace />;
     }
 
     return children;

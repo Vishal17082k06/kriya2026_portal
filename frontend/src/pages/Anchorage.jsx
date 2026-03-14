@@ -55,7 +55,7 @@ export default function Anchorage() {
   const handleSolve = (chest) => {
     if (!chest || chest.opened) return;
     const question = questions.find(q => Number(q.questionNo) === chest.id);
-    navigate(`/codequest/team/${kriyaID}/sea/${chest.id}`, { state: { ship: selectedShip, kriyaID, question } });
+    navigate(`/team/${kriyaID}/sea/${chest.id}`, { state: { ship: selectedShip, kriyaID, question } });
   };
 
   const formatTime = (sec) => { const m = Math.floor(sec / 60); const s = sec % 60; return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`; };
@@ -153,7 +153,7 @@ export default function Anchorage() {
 
   const goToRound2 = () => {
     if (!window.confirm("⚠️ Enter Round 2 now?\nYou cannot return back to Round 1.")) return;
-    navigate("/codequest/map", { replace: true, state: { ship: selectedShip, kriyaID } });
+    navigate("/map", { replace: true, state: { ship: selectedShip, kriyaID } });
   };
 
   return (
@@ -180,7 +180,7 @@ export default function Anchorage() {
           <div key={chest.id} className={`chest-wrapper ${chest.opened ? "opened" : ""}`} ref={el => chestRefs.current[chest.id] = el}
             style={{ left: `${chest.left}%`, top: `${chest.top}%`, cursor: chest.opened ? "default" : "pointer" }}
             onClick={() => handleSolve(chest)}>
-            <img src={chest.opened ? "/opens.png" : "/locked.png"} alt="chest" className="chest" />
+            <img src={chest.opened ? "/codequest/opens.png" : "/codequest/locked.png"} alt="chest" className="chest" />
             <div className="chest-name">{chest.name}</div>
           </div>
         ))}

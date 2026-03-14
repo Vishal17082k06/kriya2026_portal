@@ -63,7 +63,7 @@ export default function SeaSolve() {
         const actionCard = data.actionCard ?? null;
         markSeaOpened(seaId, earned, card);
 
-        navigate("/codequest/anchorage", {
+        navigate("/anchorage", {
           replace: true,
           state: { ship: location.state?.ship, kriyaID, reward: { seaId, earned, card, actionCard } }
         });
@@ -73,7 +73,7 @@ export default function SeaSolve() {
   };
 
   const goBack = () => {
-    navigate("/codequest/anchorage", { state: { ship: location.state?.ship, kriyaID }, replace: true });
+    navigate("/anchorage", { state: { ship: location.state?.ship, kriyaID }, replace: true });
   };
 
   return (

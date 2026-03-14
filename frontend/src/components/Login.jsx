@@ -59,7 +59,7 @@ function Login({ onLoginSuccess }) {
                         sessionStorage.clear();
                         
                         // Navigate to OTP page with state
-                        navigate("/codequest/otp", { 
+                        navigate("/otp", { 
                             state: { 
                                 email: email, 
                                 kriyaId: kriyaId 

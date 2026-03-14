@@ -13,7 +13,7 @@ const NotFound = () => {
                     This map shows nothing but the endless abyss.
                 </p>
                 <div className="compass-decoration">🧭</div>
-                <Link to="/codequest" className="back-home-btn">
+                <Link to="/" className="back-home-btn">
                     Return to Safe Harbour
                 </Link>
             </div>

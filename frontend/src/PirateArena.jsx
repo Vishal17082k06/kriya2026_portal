@@ -859,10 +859,10 @@ export default function PirateArena({ problemId = 1, onBack }) {
         }
 
         setTimeout(() => setSpinning(false), 700);
-        setTimeout(() => navigate("/codequest/map"), 2500);
+        setTimeout(() => navigate("/map"), 2500);
       } else {
         addLog("info", "Already solved — no extra doubloons this run.");
-        setTimeout(() => navigate("/codequest/map"), 1500);
+        setTimeout(() => navigate("/map"), 1500);
       }
     } else {
       // WRONG_ANSWER or COMPILATION_ERROR — deduct a life

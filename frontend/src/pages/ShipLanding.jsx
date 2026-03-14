@@ -7,19 +7,19 @@ const ships = [
     id: "WARSHIP",
     name: "Grand Bernacle",
     subtitle: "Where cannons roar, legends are born",
-    img: "/GrandBernacle.png",
+    img: "/codequest/GrandBernacle.png",
   },
   {
     id: "MERCHANT",
     name: "Merchant Vessel",
     subtitle: "Fortune favors those who dare.",
-    img: "/merchantvessel.png",
+    img: "/codequest/merchantvessel.png",
   },
   {
     id: "GHOST",
     name: "Black Pearl",
     subtitle: "Born of shadow. Feared by all",
-    img: "/blackpearlGhostship.png",
+    img: "/codequest/blackpearlGhostship.png",
   },
 ];
 
@@ -48,7 +48,7 @@ export default function ShipLanding() {
       const data = await res.json();
 
       if (data.success) {
-        navigate("/codequest/anchorage", { state: { ship } });
+        navigate("/anchorage", { state: { ship } });
       }
 
     } catch (error) {

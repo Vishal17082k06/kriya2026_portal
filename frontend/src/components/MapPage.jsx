@@ -64,21 +64,21 @@ const MapPage = () => {
     },
     d2: {
       title: "Ancient Navigator's Vault",
-      url: "/puzzles/pirate_puzzle.html",
+      url: "/codequest/puzzles/pirate_puzzle.html",
       flag: "FLAG{R1ng_Puzzl3_Mast3r_2026}",
       rewardId: 106,
       rewardName: "Kraken's Call"
     },
     d3: {
       title: "Blackbeard's Hidden Dispatch",
-      url: "/puzzles/blackbeards_cipher.html",
+      url: "/codequest/puzzles/blackbeards_cipher.html",
       flag: "FLAG{C1ph3r_M4st3r_B1ackb3ard}",
       rewardId: 107,
       rewardName: "Blackbeard's Favor"
     },
     d4: {
       title: "The Navigator's Sunstone",
-      url: "/puzzles/sunstone_puzzle.html",
+      url: "/codequest/puzzles/sunstone_puzzle.html",
       flag: "FLAG{B3am_B3nd3r_L3g3nd}",
       rewardId: 108,
       rewardName: "Navigator's Star"
@@ -634,7 +634,7 @@ const MapPage = () => {
                     return;
                   }
                   if (hasQuestion && r2Questions[idx]._id) {
-                    navigate(`/codequest/arena`, { state: { problemId: r2Questions[idx]._id, problem: r2Questions[idx] } });
+                    navigate(`/arena`, { state: { problemId: r2Questions[idx]._id, problem: r2Questions[idx] } });
                   } else {
                     alert("No quest found for this island based on your scrolls.");
                   }

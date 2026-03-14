@@ -21,7 +21,7 @@ function OtpPage() {
     useEffect(() => {
         if (!email || !kriyaId) {
             // If no email or kriyaId is provided, redirect back to login
-            navigate('/codequest/login');
+            navigate('/login');
         }
     }, [email, kriyaId, navigate]);
 
@@ -64,7 +64,7 @@ function OtpPage() {
                 // navigate to ship landing after brief success message
                 setTimeout(() => {
                     console.log("Executing navigation to /codequest/shiplanding");
-                    navigate("/codequest/shiplanding");
+                    navigate("/shiplanding");
                 }, 1500);
             }
 

@@ -44,7 +44,7 @@ function Signup() {
       setRegMail("");
 
       // navigate to login page
-      navigate("/codequest/login");
+      navigate("/login");
 
     } catch (error) {
       console.error(error);
@@ -119,7 +119,7 @@ function Signup() {
             <button
               type="button"
               className="link-button"
-              onClick={() => navigate("/codequest/login")}
+              onClick={() => navigate("/login")}
             >
               Login Here
             </button>
